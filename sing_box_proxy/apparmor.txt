@@ -1,0 +1,69 @@
+#include <tunables/global>
+
+# Профиль AppArmor для дополнения. Supervisor подставляет вместо имени профиля
+# полный slug дополнения. run.sh собирает конфиг через jq и запускает sing-box
+# в отдельном, более узком профиле.
+profile sing_box_proxy flags=(attach_disconnected,mediate_deleted) {
+  #include <abstractions/base>
+
+  signal (send,receive) peer=@{profile_name},
+  signal (receive) peer=unconfined,
+
+  # Оболочка и утилиты Alpine для run.sh
+  /run.sh rix,
+  /parse.jq r,
+  /bin/** rix,
+  /usr/bin/** rix,
+  /lib/** mr,
+  /usr/lib/** mr,
+
+  # Настройки дополнения и собранный конфиг
+  /data/ r,
+  /data/options.json r,
+  /tmp/ rw,
+  /tmp/** rwk,
+
+  /etc/** r,
+  /usr/share/zoneinfo/** r,
+  /dev/null rw,
+  /dev/urandom r,
+  @{PROC}/@{pid}/** r,
+
+  /usr/local/bin/sing-box cx -> sing_box,
+
+  profile sing_box flags=(attach_disconnected,mediate_deleted) {
+    #include <abstractions/base>
+
+    signal (receive) peer=unconfined,
+
+    network inet stream,
+    network inet6 stream,
+    network inet dgram,
+    network inet6 dgram,
+    network netlink raw,
+
+    /usr/local/bin/sing-box mr,
+    /lib/** mr,
+    /usr/lib/** mr,
+
+    /tmp/sing-box.json r,
+    /tmp/** rwk,
+
+    # DNS, сертификаты, часовые пояса
+    /etc/hosts r,
+    /etc/resolv.conf r,
+    /etc/nsswitch.conf r,
+    /etc/ssl/** r,
+    /usr/share/zoneinfo/** r,
+
+    /dev/null rw,
+    /dev/urandom r,
+    @{PROC}/sys/net/core/somaxconn r,
+    @{PROC}/sys/kernel/random/** r,
+    @{PROC}/@{pid}/** r,
+    /sys/kernel/mm/transparent_hugepage/hpage_pmd_size r,
+    /sys/fs/cgroup/** r,
+
+    deny /data/** rwklx,
+  }
+}

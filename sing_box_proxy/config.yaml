@@ -1,5 +1,5 @@
 name: sing-box proxy
-version: "1.0.0"
+version: "1.0.1"
 slug: sing_box_proxy
 description: SOCKS5/HTTP-прокси для интеграций HA через VLESS или Shadowsocks
 url: https://sing-box.sagernet.org
