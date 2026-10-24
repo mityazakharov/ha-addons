@@ -1,0 +1,25 @@
+name: sing-box proxy
+version: "1.0.0"
+slug: sing_box_proxy
+description: SOCKS5/HTTP-прокси для интеграций HA через VLESS или Shadowsocks
+url: https://sing-box.sagernet.org
+arch:
+  - amd64
+  - aarch64
+init: false
+startup: services
+boot: auto
+# Порт не пробрасывается в локальную сеть: прокси доступен только внутри HA
+# по имени хоста дополнения (<хеш репозитория>-sing-box-proxy) и порту 1080
+ports:
+  1080/tcp: null
+ports_description:
+  1080/tcp: SOCKS5/HTTP-прокси (не открывать без необходимости)
+options:
+  test_url: https://api.telegram.org
+  log_level: warn
+schema:
+  primary_link: password
+  backup_link: password?
+  test_url: url
+  log_level: list(trace|debug|info|warn|error)
